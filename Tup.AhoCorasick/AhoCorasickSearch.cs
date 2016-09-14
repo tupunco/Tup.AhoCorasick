@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Tup.AhoCorasick
 {
     /// <summary>
-    /// 
+    /// Aho-Corasick Search
     /// </summary>
     /// <remarks>
     /// Aho-Corasick exact set matching algorithm
@@ -20,25 +20,29 @@ namespace Tup.AhoCorasick
     /// </remarks>
     public class AhoCorasickSearch
     {
-        public virtual SearchResult[] SearchAll(string text, params string[] keywords)
+        /// <summary>
+        /// AC Tree Root
+        /// </summary>
+        private Node TreeRoot = null;
+
+        public virtual SearchResult[] SearchAll(string text)
         {
-            return SearchAll(text, 0, int.MaxValue, keywords);
+            return SearchAll(text, 0, int.MaxValue);
         }
 
-        public virtual SearchResult[] SearchAll(string text, int start, params string[] keywords)
+        public virtual SearchResult[] SearchAll(string text, int start)
         {
-            return SearchAll(text, start, int.MaxValue, keywords);
+            return SearchAll(text, start, int.MaxValue);
         }
 
-        public virtual SearchResult SearchFirst(string text, params string[] keywords)
+        public virtual SearchResult SearchFirst(string text)
         {
-            return SearchFirst(text, 0, keywords);
+            return SearchFirst(text, 0);
         }
 
-        public SearchResult[] SearchAll(string text, int start, int count, params string[] keywords)
+        public SearchResult[] SearchAll(string text, int start, int count)
         {
             CheckArguments(text, start, count);
-            CheckKeywords(keywords);
 
             List<SearchResult> results = null;
             if (count == int.MaxValue)
@@ -46,7 +50,7 @@ namespace Tup.AhoCorasick
             else
                 results = new List<SearchResult>(count);
 
-            foreach (SearchResult result in SearchIterator(text, start, keywords))
+            foreach (SearchResult result in SearchIterator(text, start))
             {
                 results.Add(result);
                 if (results.Count == count)
@@ -56,25 +60,26 @@ namespace Tup.AhoCorasick
             return results.ToArray();
         }
 
-        public SearchResult SearchFirst(string text, int start, params string[] keywords)
+        public SearchResult SearchFirst(string text, int start)
         {
             CheckArguments(text, start, int.MaxValue);
-            CheckKeywords(keywords);
 
-            IEnumerator<SearchResult> iter = SearchIterator(text, start, keywords).GetEnumerator();
+            IEnumerator<SearchResult> iter = SearchIterator(text, start).GetEnumerator();
             if (iter.MoveNext())
                 return iter.Current;
             return SearchResult.Empty;
         }
 
-        protected static IEnumerable<SearchResult> SearchIterator(string text, int start, params string[] keywords)
+        protected IEnumerable<SearchResult> SearchIterator(string text, int start)
         {
+            var root = this.TreeRoot;
+            if (root == null)
+                throw new ArgumentNullException("root", "need search.Build()");
+
+            var ptr = root;
+            int index = 0;
             if (start > 0)
                 text = text.Substring(start);
-
-            Node root = BuildTree(keywords);
-            Node ptr = root;
-            int index = 0;
 
             while (index < text.Length)
             {
@@ -104,6 +109,18 @@ namespace Tup.AhoCorasick
             }
         }
         /// <summary>
+        /// Build AC Tree
+        /// </summary>
+        /// <param name="keywords"></param>
+        /// <returns></returns>
+        public bool Build(params string[] keywords)
+        {
+            CheckKeywords(keywords);
+
+            this.TreeRoot = BuildTree(keywords);
+            return true;
+        }
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="keywords"></param>
@@ -123,7 +140,7 @@ namespace Tup.AhoCorasick
                     foreach (char c in keyword)
                     {
                         newNode = null;
-                        
+
                         if ((newNode = cNode.GetTransition(c)) == null)
                         {
                             newNode = new Node(cNode, c);
@@ -254,6 +271,7 @@ namespace Tup.AhoCorasick
             }
         }
 
+        [System.Diagnostics.DebuggerHidden]
         protected static void CheckKeywords(params string[] keywords)
         {
             if (keywords == null)
@@ -325,6 +343,11 @@ namespace Tup.AhoCorasick
         /// </summary>
         /// <value>The matched keyword.</value>
         public string Match { get; internal set; }
+
+        public override string ToString()
+        {
+            return string.Format("[SearchResult Index:{0}, Length:{1}, Match:{2}]", this.Index, this.Length, this.Match);
+        } 
 
         /// <summary>
         /// Determines whether the specified <see cref="System.Object"/> is equal to this instance.
