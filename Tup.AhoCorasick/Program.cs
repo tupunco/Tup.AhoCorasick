@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System;
 
 namespace Tup.AhoCorasick
 {
@@ -10,7 +7,9 @@ namespace Tup.AhoCorasick
         static void Main(string[] args)
         {
             var search = new AhoCorasickSearch();
-            var res = search.SearchAll("ushers", new string[] { "he", "she", "his", "hers" });
+            var keywords = new string[] { "he", "she", "his", "hers" };
+            search.Build(keywords);
+            var res = search.SearchAll("ushers" );
             Console.Write(res);
             Console.Read();
         }
