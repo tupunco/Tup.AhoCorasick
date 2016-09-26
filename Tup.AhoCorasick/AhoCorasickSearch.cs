@@ -1,6 +1,6 @@
-
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Tup.AhoCorasick
 {
@@ -25,6 +25,52 @@ namespace Tup.AhoCorasick
         /// </summary>
         private Node TreeRoot = null;
 
+        /// <summary>
+        /// search all and replace text
+        /// </summary>
+        /// <param name="ac"></param>
+        /// <param name="content"></param>
+        /// <param name="newWord"></param>
+        /// <returns></returns>
+        public string Replace(string text, string newWord)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            var result = this.SearchAll(text);
+            if (result == null || result.Length <= 0)
+                return text;
+
+            if (newWord == null)
+                newWord = "";
+
+            var startIndex = 0;
+            var endIndex = 0;
+            var resContent = new StringBuilder();
+            foreach (var v in result)
+            {
+                endIndex = v.Index;
+                if (endIndex > startIndex)
+                    resContent.Append(text.Substring(startIndex, endIndex - startIndex));
+
+                resContent.Append(newWord);
+                startIndex = v.Index + v.Match.Length;
+            }
+
+            var rcLen = text.Length;
+            if (startIndex < rcLen)
+            {
+                endIndex = rcLen;
+                resContent.Append(text.Substring(startIndex, endIndex - startIndex));
+            }
+            return resContent.ToString();
+        }
+
+        /// <summary>
+        /// Search All
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         public virtual SearchResult[] SearchAll(string text)
         {
             return SearchAll(text, 0, int.MaxValue);
